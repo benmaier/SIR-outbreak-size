@@ -125,6 +125,7 @@ def plot_response_curve():
 
     R0th = np.linspace(1,5,1001)
     ax.plot(R0th, 1-1/R0th**2,label=r'1-1/R$_0^2$')
+    ax.plot(R0th, 1-np.exp(-R0th),label=r'1-exp(-R$_0$)')
     ax.plot(R0s, Omega_SIR,label=r'SIR')
     ax.legend()
 

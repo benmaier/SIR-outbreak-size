@@ -182,9 +182,9 @@ def plot_final(s0=0.9999999):
     sig = sigmoid_final(R0s)
 
     fig, ax = pl.subplots(1,1,figsize=(4,3.5))
-    pl.plot(R0s, exact, label='SIR')
+    pl.plot(R0s, exact, lw=3, c='k', alpha=0.3, label='SIR')
     handle_new, = pl.plot(R0s, new, label='new approximation')
-    handle_sig, = pl.plot(R0s, sig, label='old approximation')
+    handle_sig, = pl.plot(R0s, sig, '-.', label='old approximation')
     pl.legend(loc=[0.03,0.8])
     pl.ylabel(r'outbreak size $\Omega$')
     pl.xlabel('basic reproduction number $R_0$')
@@ -198,7 +198,7 @@ def plot_final(s0=0.9999999):
     ndx = np.argmax(1-new/exact)
     print(R0s[ndx])
 
-    ia.plot(R0s[1:], 1-sig[1:]/exact[1:], color=handle_sig.get_color())
+    ia.plot(R0s[1:], 1-sig[1:]/exact[1:], '-.', color=handle_sig.get_color())
     #ia.plot([2.25,3.0],[0.06,0.06],':',lw=1,c='k')
 
     ia.set_ylabel('rel. err.',loc='top')
@@ -263,14 +263,14 @@ def plot_epidemic(R0, s0=1-1e-4, axs=None):
         fig, axs = pl.subplots(1,2)
 
     axs[0].plot(t, exact, lw=3, c='k', alpha=0.3, label='exact')
-    axs[0].plot(tnew, new, label='new approx. ')
-    axs[0].plot(t, sigmoid, label='old approx.')
+    axs[0].plot(tnew, new, label='new ')
+    axs[0].plot(t, sigmoid, '-.', label='old')
 
     #axs[0].plot(tworse, worse)
 
     axs[1].plot(t[:-1], np.diff(exact)/np.diff(t), lw=3, c='k', alpha=0.3, label='exact')
-    axs[1].plot(tnew[:-1], np.diff(new)/np.diff(tnew),  label='new approx.')
-    axs[1].plot(t[:-1], np.diff(sigmoid)/np.diff(t), label='old approx. ')
+    axs[1].plot(tnew[:-1], np.diff(new)/np.diff(tnew),  label='new')
+    axs[1].plot(t[:-1], np.diff(sigmoid)/np.diff(t), '-.', label='old')
 
     axs[0].set_xlim(t[[0,-1]])
     axs[1].set_xlim(t[[0,-1]])
@@ -296,7 +296,7 @@ def outbreak_size_reduction_upper(R0, Re):
     return 1-(1-np.exp(-Re)/(1-np.exp(-R0)))
 
 def plot_outbreak_reduction(R0s):
-    fig, ax = pl.subplots(1,1,figsize=(4,3))
+    fig, ax = pl.subplots(1,1,figsize=(4,3.5))
     for iR0, R0 in enumerate(R0s):
         Re = np.linspace(1, R0, 101)
         red_ex = 1-model_final(Re) / model_final([R0])[0]
@@ -316,7 +316,7 @@ def plot_outbreak_reduction(R0s):
     return ax
 
 def plot_t_inflection(s0=1-1e-4):
-    fig, ax = pl.subplots(1,1,figsize=(4,3))
+    fig, ax = pl.subplots(1,1,figsize=(3,4))
 
     #R0s = np.logspace(0.01,1.3,101)
     R0s = 1+np.logspace(-2,np.log10(99),301)
@@ -348,19 +348,19 @@ def plot_t_inflection(s0=1-1e-4):
     #t_new_r_infty = np.array(t_new_r_infty)
     ax.plot(R0s-1, t_exact,lw=3,c='k',alpha=0.3,label='exact')
     new_handle, = ax.plot(R0s-1, t_new, label='new approx.')
-    sig_handle, = ax.plot(R0s-1, t_sigmoid, label='old approx.')
+    sig_handle, = ax.plot(R0s-1, t_sigmoid, '-.', label='old approx.')
     #half_om_handle, = ax.plot(R0s-1, t_new_half_Omega, label='new approx.')
     #_handle, = ax.plot(R0s-1, t_new_r_infty, label='new approx.')
 
     iax = ax.inset_axes([0.2,0.15,0.35,0.5])
     iax.plot(R0s-1, np.abs(1-t_new/t_exact), color=new_handle.get_color())
-    iax.plot(R0s-1, np.abs(1-t_sigmoid/t_exact), color=sig_handle.get_color())
+    iax.plot(R0s-1, np.abs(1-t_sigmoid/t_exact), '-.', color=sig_handle.get_color())
     #iax.plot(R0s-1, np.abs(1-t_new_half_Omega/t_exact))
     #iax.plot(R0s-1, np.abs(1-t_new_r_infty/t_exact))
-    iax.plot([4,4],[0.0,0.12],':',c='k',lw=1,alpha=0.5)
-    iax.plot([R0s[0]-1,4],[0.03,0.03],':',lw=1,c='k',alpha=0.5)
-    iax.plot([R0s[0]-1,4],[0.12,0.12],':',lw=1,c='k',alpha=0.5)
-    iax.set_yticks([0,0.03,0.12,0.2,0.3])
+    iax.plot([5,5],[0.0,0.13],':',c='k',lw=1,alpha=0.5)
+    iax.plot([R0s[0]-1,5],[0.03,0.03],':',lw=1,c='k',alpha=0.5)
+    iax.plot([R0s[0]-1,5],[0.13,0.13],':',lw=1,c='k',alpha=0.5)
+    iax.set_yticks([0,0.03,0.13,0.2,0.3])
     iax.set_ylim(0,0.3)
     iax.tick_params(axis='both', which='major', labelsize='small')
 
@@ -382,7 +382,7 @@ def plot_t_inflection(s0=1-1e-4):
 if __name__=="__main__":
     axf = plot_final()
     axf.get_figure().savefig('./figures/./comparison_outbreak_size.pdf')
-    fig, axs = pl.subplots(2,3,figsize=(8,5))
+    fig, axs = pl.subplots(2,3,figsize=(7,4))
     #plot_epidemic(1.1,axs=axs)
     #plot_epidemic(1.4,axs=axs)
     #plot_epidemic(1.8,axs=axs)
@@ -391,8 +391,8 @@ if __name__=="__main__":
     plot_epidemic(2.3,axs=axs[:,2])
     #plot_pade_approximation(1.9)
 
-    axs[0,0].set_ylabel('freq. recovereds r(t)')
-    axs[1,0].set_ylabel('freq. infecteds j(t)')
+    axs[0,0].set_ylabel('share of recovereds r(t)')
+    axs[1,0].set_ylabel('prevalence j(t)')
     axs[1,1].set_xlabel('time t')
     axs[0,0].legend()
 
