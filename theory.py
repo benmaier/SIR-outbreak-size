@@ -9,6 +9,8 @@ from scipy.interpolate import CubicSpline
 
 import matplotlib.pyplot as pl
 
+from bfmplot.sequences import bochenska2 as colors
+
 from matplotlib.ticker import PercentFormatter
 
 
@@ -165,6 +167,12 @@ def sigmoid_final(R0):
 def new_final(R0):
     return (1-1/R0**2)
 
+def complicated_new_final(R0):
+    #return 1 - (-(np.sqrt(108 + 2916/R0**2)/2 - 27/R0)**(1/3)/3 + (np.sqrt(108 + 2916/R0**2)/2 - 27/R0)**(-1/3))**4
+    A = np.sqrt(3+81/R0**2) - 9/R0
+    B = 3**(1/3)
+    return 1 - B/27 * ( (A**(2/3) - B)/A**(1/3) )**4
+
 def model_final(R0s, s0=1-1e-7):
     exact = []
     for R0 in R0s:
@@ -180,31 +188,40 @@ def plot_final(s0=0.9999999):
         exact.append(_exact)
     new = new_final(R0s)
     sig = sigmoid_final(R0s)
+    new2 = complicated_new_final(R0s)
 
-    fig, ax = pl.subplots(1,1,figsize=(4,3.5))
-    pl.plot(R0s, exact, lw=3, c='k', alpha=0.3, label='SIR')
-    handle_new, = pl.plot(R0s, new, label='new approximation')
-    handle_sig, = pl.plot(R0s, sig, '-.', label='old approximation')
-    pl.legend(loc=[0.03,0.8])
-    pl.ylabel(r'outbreak size $\Omega$')
-    pl.xlabel('basic reproduction number $R_0$')
+    fig, ax = pl.subplots(1,1,figsize=(4.5,3.5))
+    pl.plot(R0s, exact, lw=4, c='k', alpha=0.3, label='SIR-type models')
+    handle_new, = pl.plot(R0s, new, label=r'1-1/R$_0^2$')
+    handle_sig, = pl.plot(R0s, sig, '-.', label='2(1-1/R$_0$)/R$_0$')
+    handle_new2, = pl.plot(R0s, new2, '--',label='Ω2')
+    pl.legend(loc=[0.03,0.66])
+    pl.ylabel(r'outbreak size Ω')
+    pl.xlabel('basic reproduction number R$_0$')
+    ax.set_xticks([1,1.5,2,2.5,3])
 
     ia = ax.inset_axes([0.25,0.12, 0.4,0.3])
-    ia.plot([2.25,2.25],[0.00,0.42],':',lw=1,c='k')
-    ia.plot([2.25,3.00],[0.42,0.42],':',lw=1,c='k')
+    ia.plot([1,3],[0.00,0.06],':',lw=1,c='k')
+    ia.plot([1,3],[0.00,0.02],':',lw=1,c='k')
     ia.plot(R0s[1:], 1-new[1:]/exact[1:], color=handle_new.get_color())
 
-    print(1-new[1:]/exact[1:])
-    ndx = np.argmax(1-new/exact)
-    print(R0s[ndx])
+    ndx = np.argmax(1-new[1:]/exact[1:])
+    print("new max:", R0s[ndx+1])
+    print(1-new[ndx+1]/exact[ndx+1])
+
+    ndx = np.argmax(1-new2[1:]/exact[1:])
+    print("new2 max:", R0s[ndx+1])
+    print(1-new2[ndx+1]/exact[ndx+1])
 
     ia.plot(R0s[1:], 1-sig[1:]/exact[1:], '-.', color=handle_sig.get_color())
+    ia.plot(R0s[1:], 1-new2[1:]/exact[1:],':',lw=2,color=handle_new2.get_color())
     #ia.plot([2.25,3.0],[0.06,0.06],':',lw=1,c='k')
 
     ia.set_ylabel('rel. err.',loc='top')
+    ia.set_yscale('log')
 
-    ia.set_yticks([0.06,0.42,0.53])
-    ia.set_ylim([0,0.53])
+    ia.set_yticks([0.01,0.02,0.06,0.53])
+    ia.set_ylim([0.01,0.53])
     ia.yaxis.set_major_formatter(PercentFormatter(xmax=1,decimals=0))
     ia.yaxis.set_label_position("right")
     ia.spines["right"].set_visible(True)
@@ -296,7 +313,7 @@ def outbreak_size_reduction_upper(R0, Re):
     return 1-(1-np.exp(-Re)/(1-np.exp(-R0)))
 
 def plot_outbreak_reduction(R0s):
-    fig, ax = pl.subplots(1,1,figsize=(4,3.5))
+    fig, ax = pl.subplots(1,1,figsize=(3.5,3.5))
     for iR0, R0 in enumerate(R0s):
         Re = np.linspace(1, R0, 101)
         red_ex = 1-model_final(Re) / model_final([R0])[0]
@@ -379,6 +396,20 @@ def plot_t_inflection(s0=1-1e-4):
 
     return ax
 
+def plot_approximations():
+    fig, ax = pl.subplots(1,1,figsize=(4,3.75))
+    x = np.linspace(0.001,1,1001)
+    ax.plot(x, -np.log(x),ls='-',lw=4,c='k',alpha=0.3,label=' -ln(s)')
+    ax.plot(x, 1/np.sqrt(x)-np.sqrt(x),ls='-',label=r'1/√s - √s')
+    ax.plot(x, 2/x**(1/4)-2*x**(1/4),ls='--',color=colors[2],label=r'2/s$^{1/4}$ - 2s$^{1/4}$')
+    ax.plot(x, -np.log(x)*(1-x),ls='-',lw=1,color=colors[5],label=r' -(1-s)ln(s)')
+    ax.set_xlabel('fraction susceptibles s')
+    ax.set_ylim(0,4)
+    ax.set_xlim(0,1)
+    ax.legend()
+    fig.tight_layout()
+    return ax
+
 if __name__=="__main__":
     axf = plot_final()
     axf.get_figure().savefig('./figures/./comparison_outbreak_size.pdf')
@@ -410,6 +441,9 @@ if __name__=="__main__":
 
     print(f"{outbreak_size_reduction(R0=2.5,Re=1.25)=}")
     print(f"{outbreak_size_reduction(R0=5.0,Re=2.50)=}")
+
+    ax = plot_approximations()
+    ax.get_figure().savefig('./figures/log-approx.pdf')
 
     pl.show()
 
